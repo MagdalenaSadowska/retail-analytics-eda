@@ -6,7 +6,7 @@ Retail sales EDA | SQL (data cleaning &amp; prep) → Excel / Power BI (visualiz
 3. Do we have an inventory problem?
 4. Does seasonality affect the margin?
 5. Do promotions have a negative impact on profit?
-6. Which countries are overstocked?
+6. Which countries are overstocked?  
 7. Do we have suspicious data (quality issues)? 
    Should we change the way we collect data? 
    What improvements can we make?
