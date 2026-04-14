@@ -1,6 +1,6 @@
---CZYSZCZENIE DANYCH W TABELI sales_orders
+-- DATA CLEANING FOR sales_orders TABLE
 
-	--SPRAWDZENIE CZY NIEMA POWIĄZANIA Z NULLAMI W KOLUMNIE ORDER_DATE z innymi kolumnami
+	-- CHECKING FOR CORRELATIONS BETWEEN NULL VALUES IN order_date AND OTHER COLUMNS
 	SELECT *
 	FROM sales_orders
 	WHERE order_date IS NULL;
@@ -8,15 +8,16 @@
 	SELECT *
 	FROM sales_orders
 	WHERE order_date  IS NULL
-	AND  discount_pct IS NULL; -- zauważyłam że nule częściowo występują razem w dwuch tabelach sprawdzam jak w dużej cześci. Wyszło mi , ze tylko 79 pozycjach
+	AND  discount_pct IS NULL; -- I noticed that nulls partially appear together in two columns, checking how often this occurs
+							   -- It turned out that only 79 records have nulls in both columns simultaneously
 
 	DELETE FROM sales_orders
-	WHERE order_date IS NULL; -- Usuwam wiersze z NULLami w kolumnie order_date (629 wierszy)
+	WHERE order_date IS NULL; -- Removing rows with NULL values in order_date column (629 rows)
 
 	SELECT COUNT (*)
-	FROM sales_orders; -- 260 780 - 629 = 260 151 wartości się zgadzają 
+	FROM sales_orders; -- 260,780 - 629 = 260,151 rows remaining - count confirmed
 
-	--SPRAWDZENIE CZY NIEMA POWIĄZANIA Z NULLAMI W KOLUMNIE discount_pct z innymi kolumnami
+	-- CHECKING FOR CORRELATIONS BETWEEN NULL VALUES IN discount_pct AND OTHER COLUMNS
 
 	SELECT *
 	FROM sales_orders
@@ -24,17 +25,17 @@
 
 	SELECT *
 	FROM sales_orders
-	WHERE TRY_CAST(discount_pct AS decimal(10,2)) = 0 -- sprawdzam jak wyglądają rekordy gdzie jest discount_pct równy 0
+	WHERE TRY_CAST(discount_pct AS decimal(10,2)) = 0 -- checking how records with discount_pct equal to 0 look like
 	
 	SELECT COUNT(*)
 	FROM sales_orders
-	WHERE TRY_CAST(discount_pct AS decimal(10,2)) = 0 -- sprawdzam ile jest rekordów z discount_pct równym 0
+	WHERE TRY_CAST(discount_pct AS decimal(10,2)) = 0 -- checking how many records have discount_pct equal to 0
 
 	UPDATE sales_orders
 	SET discount_pct = 0
-	WHERE discount_pct IS NULL;-- zmieniam null na wartość 0 
+	WHERE discount_pct IS NULL;-- replacing null values with 0
 
-	--DUPLIKATY W  order_id
+	-- DUPLICATES IN order_id
 
 	SELECT *
 	FROM sales_orders
@@ -46,23 +47,38 @@
 		)
 	ORDER BY order_id;
 
-	-- UJEDNOLICAMY NAZWY W KOLUMNIE status
+	SELECT *, ROW_NUMBER () OVER (PARTITION BY order_id ORDER BY order_id ) AS ROW_NUM
+	FROM sales_orders  -- checking how data looks when grouped by order_id
+
+	WITH  ROW_NUM_CTE AS (
+						SELECT *, ROW_NUMBER () OVER (PARTITION BY order_id ORDER BY order_id ) AS ROW_NUM
+						FROM sales_orders)
+	DELETE FROM ROW_NUM_CTE
+	WHERE ROW_NUM>1; -- creating a temporary table and removing records where row_number is greater than 1.
+	
+	    -- 769 rows were removed, verifying with previous query whether any duplicates remain
+		-- expected 780 removals, but the difference is likely due to records
+		-- already removed in earlier operations - no duplicates remaining
+	SELECT DISTINCT order_id
+	FROM sales_orders
+
+	-- STANDARDIZING VALUES IN status COLUMN
 
 	UPDATE sales_orders
 	SET status = 'SHIPPED'
-	WHERE status IN ('Ship','Shipped');--Ship i Shipped ujednolicam do SHIPPED
+	WHERE status IN ('Ship','Shipped');-- 'Ship' and 'Shipped' standardized to 'SHIPPED'
 
 	UPDATE sales_orders
 	SET status = 'COMPLETED'
-	WHERE status IN ('complete','Completed'); -- complete ujednolicam do completed
+	WHERE status IN ('complete','Completed'); -- 'complete' standardized to 'COMPLETED'
 
 	UPDATE sales_orders
 	SET status = 'DONE'
-	WHERE status = 'done';-- done ujednolicam do DONE
+	WHERE status = 'done';-- 'done' standardized to 'DONE'
 
 
 
-	-- UJEDNOLICAM NAZWY W country na skróty ISO
+	-- STANDARDIZING country COLUMN TO ISO CODES
 
 	UPDATE sales_orders
 	SET country = 'DE'
@@ -104,28 +120,28 @@
 	SET country = 'AT'
 	WHERE country = 'austria';
 
-	--CZYSZCZENIE I UJEDNOLICENIE DAT
+	-- DATE CLEANING AND STANDARDIZATION
 
 	SELECT *
 	FROM sales_orders
 	WHERE order_date LIKE '____-__'
-	      OR order_date = 'not_a_date' -- sprawdzam czy nie widzę jakiś zależności między niepełnymidatami a rwszta kolumn.
+	      OR order_date = 'not_a_date' -- checking for any correlations between incomplete dates and other columns
 
 	SELECT  count(*) AS number
 	FROM sales_orders
-	WHERE order_date LIKE '____-__'; -- 697 dat z formatem YYYY-MM to 0,3%
+	WHERE order_date LIKE '____-__'; -- 697 dates in YYYY-MM format represent 0.3%
 
 	SELECT  count(*) AS number
 	FROM sales_orders
-	WHERE order_date LIKE 'not_a_date'; -- 661 dat z formatem 'not_a_date' to 0,3%
+	WHERE order_date LIKE 'not_a_date'; -- 661 dates with value 'not_a_date' represent 0.3%
 
-		--Ponieważ błędne daty to poniżej 1% dlatego je usóamy 
+		 -- since invalid dates are below 1% we remove them 
 
 	DELETE FROM sales_orders
 	WHERE order_date LIKE '____-__'
 	OR order_date = 'not_a_date'
 
-	 --UJEDNOLICANIE FORMATÓW DAT
+	 -- STANDARDIZING DATE FORMATS
 	 SELECT order_date,
 	 CASE
 	 WHEN order_date LIKE '__/__/____'
@@ -142,7 +158,7 @@
 			 + SUBSTRING (order_date, 9,2)
 	ELSE order_date
 	END
-	FROM sales_orders; -- sprawdzam jak będą wyglądały dane po zmianach
+	FROM sales_orders; -- checking how data will look after changes
 
 	UPDATE sales_orders
 	SET order_date = CASE
@@ -163,7 +179,7 @@
 			+ SUBSTRING(order_date, 6, 2) + '-'
 		    + SUBSTRING(order_date, 9, 2)
 	ELSE order_date
-	END; -- wprowadzenie zmian
+	END; -- applying changes
 
 	SELECT DISTINCT order_date
 	FROM sales_orders
@@ -171,35 +187,63 @@
 		OR order_date LIKE '__-__-____' 
 		OR order_date LIKE '____/__/__'
 		OR order_date LIKE '____.__.__'
-		OR order_date LIKE '__.__.____'; -- Sprawdzam czy coś zostało jeszcze ze starych formatów lub takich któych teoretycznie nie było. Znalazłąm jeszcze format  YYYY.MM.DD dodaje to do powyższej komendy
+		OR order_date LIKE '__.__.____'; -- verifying whether any old formats remain or any unexpected formats exist
+										 -- found additional format YYYY.MM.DD — added to the query above
 
+-- CLEANING quantity COLUMN
 
+	SELECT *
+	FROM sales_orders
+	WHERE quantity = 0; --analyzing records where quantity = 0 to check if this makes business sense
 
+	SELECT status, COUNT(*) AS number
+	FROM sales_orders
+	WHERE quantity = 0
+	GROUP BY ROLLUP (status) -- checking count of quantity = 0 records by status
+							 -- total: 1,028 records out of 258,793 which is 0.4%
 
+	DELETE FROM sales_orders
+	WHERE quantity = 0; -- removing 1,028 rows
 
+	SELECT MIN(quantity) AS min, MAX(quantity) AS max
+	FROM sales_orders --  verifying there are no fractional values such as 0.2 or 0.6
 
-	
+-- CLEANING unit_price COLUMN
 
+	SELECT *
+	FROM sales_orders
+	WHERE TRY_CAST(unit_price AS decimal(10,2)) = 0 -- analyzing records where unit_price = 0 to check if this makes business sense
+													-- having 4 or 5 items with price 0.0 across different orders, products and statuses
+													-- is unlikely to represent free items, especially since some also have a discount applied
 
+	SELECT status, COUNT(*)
+	FROM sales_orders
+	WHERE TRY_CAST(unit_price AS decimal(10,2)) = 0
+	GROUP BY ROLLUP (status); -- checking count of unit_price = 0 records by status — 1.594 records found
 
+	SELECT COUNT (*)
+	FROM sales_orders -- 257.765 total records currently
 
-
+	-- unit_price = 0 represents 0.6% — removing these records
+	DELETE FROM sales_orders
+	WHERE TRY_CAST(unit_price AS decimal(10,2)) = 0
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---CZYSZCZENIE DANYCH W TABELI products_mmmgmeum
+--DATA CLEANING FOR products_mmmgmeum TABLE
 
-	--OGARNIANIE NULLI w kolumnie launch_date
+	-- HANDLING NULL VALUES IN launch_date COLUMN
 
 	SELECT *
 	FROM products_mmmgmeum
-	WHERE launch_date is NULL; -- Sprawdzam czy istnieje jakaś korelacja między wartością NULL w kolumnie launch_date a resztą.
-		-- WArtości NULL w kolumnie launch_date nie mają żadnej korelacji w pozostałymi wartościami. ponieważ jest ich tylko 91 co stanowi 3,64% postanawiam je usunąć.
-
+	WHERE launch_date is NULL; -- Checking whether there is any correlation between NULL values in launch_date and other columns
+							   -- NULL values in launch_date show no correlation with other columns
+							   -- since there are only 91 records representing 3.64% I decided to remove them
 	DELETE FROM products_mmmgmeum
 	WHERE launch_date is NULL;
 
-	--SPRAWDZANIE NIEKOMPLETNYCH REKORDÓW
+	
+	-- CHECKING INCOMPLETE RECORDS
 
 	SELECT launch_date, COUNT (*) AS how_many_wrog_date
 	FROM products_mmmgmeum
@@ -207,80 +251,77 @@
 	      OR launch_date  LIKE '____/__' 
 		  OR launch_date  LIKE 'not_a_date'
 	GROUP BY launch_date
-	ORDER BY how_many_wrog_date; -- sprawdzam ile jest wartości z błędną datą
-	  -- Jest ich 9 stanowią bardzo małą część związku z czym usówam je
+	ORDER BY how_many_wrog_date; -- checking count of records with invalid date format
+								 -- 9 records found, representing a very small percentage — removing them
 
 	DELETE FROM products_mmmgmeum
 	WHERE launch_date  LIKE '____-__' 
 	      OR launch_date  LIKE '____/__' 
 		  OR launch_date  LIKE 'not_a_date';
 
-	--UJEDNOLICENIE FORMATU DAT
+	-- DATE FORMAT STANDARDIZATION
 	
-SELECT launch_date,
-CASE
-WHEN launch_date LIKE '__-__-____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '__/__/____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '__.__.____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '____/__/__'
-THEN SUBSTRING(launch_date, 1, 4) + '-'
-+SUBSTRING(launch_date, 6, 2) + '-'
-+SUBSTRING(launch_date, 9, 2)
-WHEN launch_date LIKE '____.__.__'
-THEN SUBSTRING(launch_date, 1, 4) + '-'
-+SUBSTRING(launch_date, 6, 2) + '-'
-+SUBSTRING(launch_date, 9, 2)
-ELSE launch_date
-END AS new_launch_date
-FROM products_mmmgmeum; -- sprawdzenie zmiany formatów
+		SELECT launch_date,
+		CASE
+		WHEN launch_date LIKE '__-__-____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '__/__/____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '__.__.____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '____/__/__'
+		THEN SUBSTRING(launch_date, 1, 4) + '-'
+		+SUBSTRING(launch_date, 6, 2) + '-'
+		+SUBSTRING(launch_date, 9, 2)
+		WHEN launch_date LIKE '____.__.__'
+		THEN SUBSTRING(launch_date, 1, 4) + '-'
+		+SUBSTRING(launch_date, 6, 2) + '-'
+		+SUBSTRING(launch_date, 9, 2)
+		ELSE launch_date
+		END AS new_launch_date
+		FROM products_mmmgmeum; -- previewing format changes before applying
 
-UPDATE products_mmmgmeum
-SET launch_date = CASE
-WHEN launch_date LIKE '__-__-____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '__/__/____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '__.__.____'
-THEN SUBSTRING(launch_date, 7, 4) + '-'
-+SUBSTRING(launch_date, 4, 2) + '-'
-+SUBSTRING(launch_date, 1, 2)
-WHEN launch_date LIKE '____/__/__'
-THEN SUBSTRING(launch_date, 1, 4) + '-'
-+SUBSTRING(launch_date, 6, 2) + '-'
-+SUBSTRING(launch_date, 9, 2)
-WHEN launch_date LIKE '____.__.__'
-THEN SUBSTRING(launch_date, 1, 4) + '-'
-+SUBSTRING(launch_date, 6, 2) + '-'
-+SUBSTRING(launch_date, 9, 2)
-ELSE launch_date
-END; -- ujednolicenie formatów daty
+		UPDATE products_mmmgmeum
+		SET launch_date = CASE
+		WHEN launch_date LIKE '__-__-____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '__/__/____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '__.__.____'
+		THEN SUBSTRING(launch_date, 7, 4) + '-'
+		+SUBSTRING(launch_date, 4, 2) + '-'
+		+SUBSTRING(launch_date, 1, 2)
+		WHEN launch_date LIKE '____/__/__'
+		THEN SUBSTRING(launch_date, 1, 4) + '-'
+		+SUBSTRING(launch_date, 6, 2) + '-'
+		+SUBSTRING(launch_date, 9, 2)
+		WHEN launch_date LIKE '____.__.__'
+		THEN SUBSTRING(launch_date, 1, 4) + '-'
+		+SUBSTRING(launch_date, 6, 2) + '-'
+		+SUBSTRING(launch_date, 9, 2)
+		ELSE launch_date
+		END; -- applying date format standardization
 
 		
-SELECT DISTINCT launch_date
-	FROM products_mmmgmeum
-WHERE launch_date NOT LIKE '____-__-__';	-- sprawdzenie czy napweno wszytkie formaty zostały zmienione.	  
-
-
+		SELECT DISTINCT launch_date
+			FROM products_mmmgmeum
+		WHERE launch_date NOT LIKE '____-__-__';	-- verifying that all date formats have been successfully updated	  
 
 
 -- ============================================================================================================================================================
--- NAPRAWA DANYCH inventory_mmmgkubv
+-- DATA CLEANING FOR inventory_mmmgkubv TABLE
 
-	--UJEDNOLICENIE NAZW KRAJÓW W KOLUMNIE warehouse_country
-
+	-- STANDARDIZING COUNTRY NAMES IN warehouse_country COLUMN
 
 	UPDATE inventory_mmmgkubv
 	SET warehouse_country = 'DE'
@@ -296,23 +337,24 @@ WHERE launch_date NOT LIKE '____-__-__';	-- sprawdzenie czy napweno wszytkie for
 
 	SELECT DISTINCT warehouse_country
 		FROM inventory_mmmgkubv;
-		-- UJEDNOLICIŁAM WSZYTKIE KRAJE OBECNIE MAMY: DE, PL, CZ
+		-- ALL COUNTRIES STANDARDIZED, CURRENTLY WE HAVE: DE, PL, CZ
 
 
-	--OGARNIANIE NULLI w last_stock_update
+	-- HANDLING NULL VALUES IN last_stock_update COLUMN
 
 	SELECT *
 	FROM inventory_mmmgkubv
 	WHERE last_stock_update IS NULL;
-		--NULLE w kolumnie last_stock_update są losowe, nie mają powiązania z żadną z kolumn,
-		--ponieważ są losowe i jest ich mało (0,7%) to usówam je z tabeli to nie powinno wpłynąć na dalszą analizę
+		-- NULL values in last_stock_update are random, showing no correlation with any other column
+		-- since they are random and represent only 0.7% I am removing them from the table
+		-- this should not negatively affect further analysis
 
 	DELETE FROM inventory_mmmgkubv
-	WHERE last_stock_update IS NULL; -- Usuwam wiersze z NULLami w kolumnie last_stock_update
+	WHERE last_stock_update IS NULL; -- Removing rows with NULL values in last_stock_update column
 
 	SELECT COUNT (*) 
 	FROM inventory_mmmgkubv;
-		-- SPRAWDZAM CZY ZOSTAŁA USUNIĘTA ODPOWIEDNIA ILOŚĆ KOLUMN (3741-26=3715)
+		-- VERIFYING CORRECT NUMBER OF ROWS REMOVED (3741 - 26 = 3715)
 
 	-- ============================================================================================================================================================
 
