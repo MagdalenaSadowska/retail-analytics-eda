@@ -1,6 +1,6 @@
 -- ============================================================================================================
 
--- SPRAWDZENIE LICZBY WIERSZY
+-- ROW COUNT CHECK
 
 SELECT COUNT (*) AS total_rows 
 FROM sales_orders               -- 260780
@@ -13,12 +13,12 @@ FROM products_mmmgmeum          --2500
 
 -- ============================================================================================================
 
--- SPRAWDZENIE NAZW KOLUMN DLA sales_orders
+-- COLUMN NAMES AND INITIAL DATA REVIEW FOR sales_orders
 SELECT TOP 5 *
 FROM sales_orders 
 
 
---SPRAWDZENIE WARTOŚCI NULLOWYCH sales_orders
+-- NULL VALUES CHECK FOR sales_orders
 
 SELECT COUNT (*) AS total_rows, -
 	SUM(CASE WHEN order_id IS NULL THEN 1 ELSE 0 END) AS null_order_id,
@@ -31,67 +31,68 @@ SELECT COUNT (*) AS total_rows, -
 	SUM(CASE WHEN discount_pct IS NULL THEN 1 ELSE 0 END) AS null_discount_pct,
 	SUM(CASE WHEN status IS NULL THEN 1 ELSE 0 END) AS null_status
 FROM sales_orders;
-	-- mamy 629 wartości nullowych w kolumnie order_date, co stanowi 0,2% 
-	-- oraz 31322 wrtości nullowe w kolumnie discound_pct, co stanowi 12%.
-	--Braki danych w  tym wypadku najprawdopododobnie mówią o braku rabatu więc brak danych nie wpłynie na wynik analizy
+	-- 629 null values in order_date column, which is 0.2%
+	-- 31.322 null values in discount_pct column, which is 12%
+	--Missing values in this case most likely indicate no discount applied,
+	-- so initially I can assume this will not affect the analysis results
 
 
---SPRAWDZENIE DUPLIKATÓW order_id
+--DUPLICATE CHECK FOR order_id
 
 SELECT COUNT(*) AS total_rows,
 	COUNT(DISTINCT order_id) AS unique_orders
 FROM sales_orders;
-	--mamy 780 duplikatów
+	--780 duplicates found
 
 
---SPRAWDZAMY CO SIĘ DUPLIKUJE W ORDER_ID
+	--CHECKING WHAT IS DUPLICATED IN ORDER_ID
 
-SELECT order_id, COUNT(*) AS quantity_duplicates
-FROM sales_orders
-GROUP BY order_id
-HAVING COUNT(*)>1;
-	--DUPLIKATY: 780 order_id powtarza się 2 razy
-	-- DO decyzji: czy usunąć duplikaty?
+	SELECT order_id, COUNT(*) AS quantity_duplicates
+	FROM sales_orders
+	GROUP BY order_id
+	HAVING COUNT(*)>1;
+	--DUPLICATES: 390 records are duplicated
+	-- Duplicates will be removed
 
 
---SPRAWDZAMY DUPLIKATY W status
+--DUPLICATE CHECK FOR status
 SELECT COUNT(*) AS total_rows,
 	COUNT(DISTINCT status) AS unique_status
 FROM sales_orders;
-	--mamy 6 unikalnych wartości
+	-- 6 unique values found
 
 
---SPRAWDZAMYJAKIE TO WARTOŚCI I CZY NIE MA LITERÓWEK
+	-- CHECKING VALUES AND LOOKING FOR TYPOS
 
-SELECT status, COUNT(*) AS name_duplicates
-FROM sales_orders
-GROUP BY status
+	SELECT status, COUNT(*) AS name_duplicates
+	FROM sales_orders
+	GROUP BY status
 
-	-- STATUS: 6 unikalnych wartości, niespójne wielkości liter
-	-- 'complete' vs 'COMPLETED' - prawdopodobnie ten sam status
-	-- 'SHIP' vs "Shipped" - równiez prawdopodobnie ten sam status
-	-- Do standaryzacji: ujednolicić wielkość liter oraz nazewnictwo
+	-- STATUS: 6 unique values, inconsistent letter casing
+	-- 'complete' vs 'COMPLETED' - likely the same status
+	-- 'SHIP' vs 'Shipped' - likely the same status as well
+	-- To standardize: unify letter casing and naming conventions
 
 
---SPRAWDZAMY DUPLIKATY W country
+-- DUPLICATE CHECK FOR country
 SELECT COUNT(*) AS total_rows,
 	COUNT(DISTINCT country) AS unique_status
 FROM sales_orders;
-	--mamy 28 unikalnych wartości
+	-- 28 unique values found
 
 
---SPRAWDZAMYJAKIE TO WARTOŚCI I CZY NIE MA LITERÓWEK
+	-- CHECKING VALUES AND LOOKING FOR TYPOS
 
-SELECT country, COUNT(*) AS name_duplicates
-FROM sales_orders
-GROUP BY country
+	SELECT country, COUNT(*) AS name_duplicates
+	FROM sales_orders
+	GROUP BY country
 
-	-- country: 26 unikalnych wartości, niespójne wielkości liter, skróty pańśtw
-	-- duplikaty państw jak np. 'DE' vs Germany VS Deuchland 
-	-- Do standaryzacji: ujednolicić nazewnictwo państw
+	-- country: 26 unique values, inconsistent letter casing, country abbreviations mixed with full names
+	-- duplicate country names e.g. 'DE' vs 'Germany' vs 'Deutschland'
+	-- To standardize: unify country naming conventions
 
 
---SPRAWDZENIE ZAKRESÓW LICZBOWYCH
+-- NUMERIC RANGE CHECK FOR quantity AND unit_price
 
 SELECT
 	MAX (quantity) AS max_value,
@@ -101,29 +102,29 @@ SELECT
 FROM sales_orders
 WHERE quantity IS NOT NULL AND unit_price IS NOT NULL;
 
---ZAKRESY LICZBOWE:
-	-- quantity: MIN=0, MAX=608
-	-- unit_price: MIN=0.0, MAX=99.99
-	-- quantity=0 i unit_price=0 wymagają weryfikacji biznesowej
-	-- możliwe przyczyny: anulowane zamówienia, gratisy, reklamacje
-	-- Do sprawdzenia: czy quantity=0 i unit_price=0 pokrywają się ze statusem CANCELLED
+-- NUMERIC RANGES:
+    -- quantity: MIN=0, MAX=608
+    -- unit_price: MIN=0.0, MAX=99.99
+    -- quantity=0 and unit_price=0 require business verification
+    -- possible reasons: cancelled orders, free items, returns/complaints
+    -- To check: whether quantity=0 and unit_price=0 correlate with CANCELLED status
 
 SELECT quantity,status
 FROM sales_orders
 WHERE quantity=0;
 
-	-- quantity=0 występuje przy WSZYSTKICH statusach, nie tylko CANCELLED
-	-- To błąd w danych - zamówienie nie może być COMPLETED z ilością 0
+	-- quantity=0 appears across ALL statuses, not only CANCELLED
+	-- This is a data error - an order cannot be COMPLETED with quantity 0
 
 SELECT unit_price, status
 FROM sales_orders
 WHERE CAST(unit_price AS decimal(10,2)) = 0
 
-	-- unit_price=0 również występuje przy wszystkich statusach
-	-- To błąd w danych - COMPLETED/SHIPPED nie powinno mieć ceny 0
-	-- Wyjątek: CANCELLED może mieć cenę 0
+	 -- unit_price=0 also appears across all statuses
+	 -- This is a data error - COMPLETED/SHIPPED orders should not have price 0
+     -- Exception: CANCELLED orders may have price 0
 
---SPRAWDZENIE DATY
+-- DATE CHECK
 
 SELECT DISTINCT 
     LEFT(order_date, 5) AS first_4_signs,
@@ -133,10 +134,10 @@ FROM sales_orders
 WHERE order_date IS NOT NULL
 GROUP BY LEFT(order_date, 5), LEN(order_date)
 ORDER BY liczba DESC
-	-- order_date: 3 formaty dat
-	-- Dominujący: YYYY-MM-DD (większość wierszy) 
-	-- Mniejszość: DD-MM-YYYY MM-DD-YYYY
-	-- Do naprawy: ujednolicić do YYYY-MM-DD i zmienić typ na DATE
+	-- order_date: 3 date formats found
+	-- Dominant format: YYYY-MM-DD (majority of rows)
+	-- Minority formats: DD-MM-YYYY, MM-DD-YYYY
+	-- To fix: standardize to YYYY-MM-DD and change column type to DATE
 
 SELECT DISTINCT order_date
 FROM sales_orders
@@ -145,21 +146,21 @@ AND order_date IS NOT NULL
 AND order_date NOT LIKE '__/__/____'
 AND order_date NOT LIKE '____-__-__'
 AND order_date NOT LIKE '__-__-____'
-	-- Błędne wartości w order_date:
-		-- 120 dat w formacie YYYY-MM (brak dnia)
-		-- 1 wartość tekstowa: 'not_a_date'
-		-- Pozostałe ~40 000 to daty w różnych formatach DD/MM/YYYY i DD-MM-YYYY
-		-- Do naprawy przy czyszczeniu danych
+	-- Invalid values found in order_date:
+		-- dates in YYYY-MM format (missing day)
+		-- text value: 'not_a_date'
+		-- remaining ~40,000 rows contain dates in various formats DD/MM/YYYY and DD-MM-YYYY
+		-- To fix during data cleaning
 
 
 -- ============================================================================================================================================================
 
--- SPRAWDZENIE NAZW KOLUMN products_mmmgmeum 
+-- COLUMN NAMES AND INITIAL DATA REVIEW FOR products_mmmgmeum 
 SELECT TOP 5 *
 FROM products_mmmgmeum 
 
 
---SPRAWDZENIE WARTOŚCI NULLOWYCH products_mmmgmeum
+--NULL VALUES CHECK FOR products_mmmgmeum
 
 SELECT COUNT (*) AS total_rows, 
 SUM(CASE WHEN product_id IS NULL THEN 1 ELSE 0 END) AS null_product_id,
@@ -168,33 +169,35 @@ SUM(CASE WHEN sub_category IS NULL THEN 1 ELSE 0 END) AS null_sub_category,
 SUM(CASE WHEN base_price IS NULL THEN 1 ELSE 0 END) AS base_price,
 SUM(CASE WHEN launch_date IS NULL THEN 1 ELSE 0 END) AS launch_date
 FROM products_mmmgmeum; 
--- wartości nullowe występują w kolumnie launch_date i jest ich 91, co stanowi 3,64%, co jest nie wielką ilością któa nie powinna wpłynąć negatywnie na dalszą analize
+-- null values found in launch_date column: 91 rows, which is 3.64%
+-- this is a small amount and should not negatively affect further analysis. 
+-- to be decided during data cleaning what to do with these records
 
---SPRAWDZAM CZY NIE MA DUPIKATÓW W PRODUCT_ID
+-- DUPLICATE CHECK FOR product_id
 
 SELECT 
 	COUNT(*) as all_rows,
 	COUNT(DISTINCT product_id) AS unique_product_id
 FROM products_mmmgmeum; 
-	--nie ma duplikatów
+	-- no duplicates found
 
---SPRAWDZAMY UNIKALNE WARTOŚCI 
+-- UNIQUE VALUES CHECK
 
-	--KOLUMNA CATEGORY
-SELECT category, COUNT(*) AS all_rows
-FROM products_mmmgmeum
-GROUP BY ROLLUP(category)
-ORDER BY all_rows
-		--Brak literówek mamy 5 kategori:
+	-- CATEGORY COLUMN
+	SELECT category, COUNT(*) AS all_rows
+	FROM products_mmmgmeum
+	GROUP BY ROLLUP(category)
+	ORDER BY all_rows
+		-- no typos found, 5 categories present
 
-	--KOLUMNA SUB_CATEGORY
-SELECT sub_category, COUNT(*) AS all_rows
-FROM products_mmmgmeum
-GROUP BY ROLLUP (sub_category)
-ORDER BY all_rows;
-		--Brak literówek i błędó mamy 22 subkategorie
+	-- SUB_CATEGORY COLUMN
+	SELECT sub_category, COUNT(*) AS all_rows
+	FROM products_mmmgmeum
+	GROUP BY ROLLUP (sub_category)
+	ORDER BY all_rows;
+		 -- no typos or errors found, 22 subcategories present
 
---SPRAWDZENIE kolumny base_price
+--BASE_PRICE COLUMN CHECK
 
 SELECT base_price
 FROM products_mmmgmeum
@@ -204,10 +207,10 @@ SELECT
 	MIN(CAST(base_price AS decimal(10,2))) AS min_price,
 	MAX(CAST(base_price AS decimal(10,2))) AS max_price
 FROM products_mmmgmeum;
-	--BRAK CEN UJEMNYCH I ZEROWYCH
+	-- NO NEGATIVE OR ZERO PRICES FOUND
 
 
---SZUKAMY EWENTUALNCYH BŁĘDNYCH WARTOŚCI DAT
+-- CHECKING FOR INVALID DATE VALUES
 
 SELECT DISTINCT launch_date
 FROM products_mmmgmeum
@@ -216,17 +219,17 @@ AND launch_date IS NOT NULL
 AND launch_date NOT LIKE '__/__/____'
 AND launch_date NOT LIKE '____-__-__'
 AND launch_date NOT LIKE '__-__-____';
-		--Błędne wartości w launch_date:
-			-- format YYYY-MM, wartość tektowa
-		-- Do naprawy przy czyszczeniu danych
+		-- Invalid values found in launch_date:
+		-- YYYY-MM format (missing day), text value found
+		-- To fix during data cleaning
 
 -- ============================================================================================================================================================
 
--- SPRAWDZENIE NAZW KOLUMN inventory_mmmgkubv
+-- COLUMN NAMES AND INITIAL DATA REVIEW FOR inventory_mmmgkubv
 SELECT TOP 5 *
 FROM inventory_mmmgkubv
 
---SPRAWDZENIE WARTOŚCI NULLOWYCH inventory_mmmgkubv
+-- NULL VALUES CHECK FOR inventory_mmmgkubv
 
 SELECT COUNT (*) AS total_rows, 
 SUM(CASE WHEN product_id IS NULL THEN 1 ELSE 0 END) AS null_product_id,
@@ -234,34 +237,36 @@ SUM(CASE WHEN warehouse_country IS NULL THEN 1 ELSE 0 END) AS null_warehouse_cou
 SUM(CASE WHEN stock_quantity IS NULL THEN 1 ELSE 0 END) AS null_stock_quantity,
 SUM(CASE WHEN last_stock_update IS NULL THEN 1 ELSE 0 END) AS last_stock_update
 FROM inventory_mmmgkubv; 
-	--Tu mamy 26 wartości nullowych w kolumnie stock_update, co stanowi 0,7% co również nie powinno mnieć negatywnego wpływu na dalszą analizę
+	--26 null values found in last_stock_update column, which is 0.7%
+	-- this should not negatively affect further analysis
+	-- to be decided during data cleaning what to do with these records
 
---SPRAWDZAM CZY W product_id NIE MA WARTOŚCI UJEMNYCH ORAZ CZY NIE MA TAM TEKSTU
+-- CHECKING product_id FOR NEGATIVE VALUES AND NON-NUMERIC VALUES
 
 SELECT product_id
 FROM inventory_mmmgkubv
 WHERE product_id<0;
-	-- BARAK WARTOŚCI UJEMNYCH
+	-- NO NEGATIVE VALUES FOUND
 
 SELECT product_id
 FROM inventory_mmmgkubv
 WHERE TRY_CAST(product_id AS NUMERIC) IS NULL;
-	-- BARAK WARTOŚCI innych niż numeryczne
+	-- NO NON-NUMERIC VALUES FOUND
 
--- SPRAWDZAMY UNIKALNE WARTOŚCI DLA warehouse_country
+-- UNIQUE VALUES CHECK FOR warehouse_country
 
 SELECT DISTINCT warehouse_country
 FROM inventory_mmmgkubv;
-	-- ujednolicić nazwy krajów np. mamy Polska vs POL vs PL
+	-- country names need to be standardized e.g. 'Polska' vs 'POL' vs 'PL'
 
---SPRAWDZAM CZY W stock_quantity nie ma wartości ujemnych
+-- CHECKING stock_quantity FOR NEGATIVE VALUES
 
 SELECT stock_quantity
 FROM inventory_mmmgkubv
 WHERE stock_quantity<0;
-	-- nie ma wartości ujemnych
+	-- no negative values found
 
---SPRAWDZAM POPRAWNOŚĆ DAT
+-- DATE VALIDITY CHECK
 
 SELECT DISTINCT last_stock_update
 FROM inventory_mmmgkubv
@@ -271,3 +276,8 @@ AND last_stock_update LIKE '____-__-__'
 AND last_stock_update LIKE '__-__-____'
 AND last_stock_update LIKE '____/__/__'
 AND last_stock_update LIKE '__/__/____'
+
+SELECT DISTINCT last_stock_update
+FROM inventory_mmmgkubv
+
+-- All dates are in YYYY-MM-DD format
