@@ -228,6 +228,9 @@
 	DELETE FROM sales_orders
 	WHERE TRY_CAST(unit_price AS decimal(10,2)) = 0
 
+	SELECT COUNT(*)
+	FROM sales_orders;--VERIFYING NUMBER OF ROWS (2400)
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 --DATA CLEANING FOR products_mmmgmeum TABLE
@@ -315,7 +318,10 @@
 		
 		SELECT DISTINCT launch_date
 			FROM products_mmmgmeum
-		WHERE launch_date NOT LIKE '____-__-__';	-- verifying that all date formats have been successfully updated	  
+		WHERE launch_date NOT LIKE '____-__-__';	-- verifying that all date formats have been successfully updated	 
+		
+		SELECT COUNT(*)
+		FROM products_mmmgmeum; --VERIFYING NUMBER OF ROWS (2400)
 
 
 -- ============================================================================================================================================================
@@ -357,4 +363,4 @@
 		-- VERIFYING CORRECT NUMBER OF ROWS REMOVED (3741 - 26 = 3715)
 
 	-- ============================================================================================================================================================
-
+	
