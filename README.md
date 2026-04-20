@@ -34,3 +34,11 @@ Raw data files provided by mentor for educational purposes only.
 3. Data preparation
 4. Sales analysis
 5. Visualization & conclusions
+
+## 📊 Reports
+- `reports/data_cleaning_summary.pdf` — summary of data quality findings and cleaning decisions across all three tables
+
+## 🗂️ SQL Scripts
+- `sql/01_data_import.sql` — initial data import and table setup
+- `sql/01_data_quality.sql` — data quality check for all three tables
+- `sql/02_data_cleaning.sql` — data cleaning and standardization
