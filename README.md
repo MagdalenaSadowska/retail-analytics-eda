@@ -13,7 +13,7 @@ Retail sales EDA | SQL (data cleaning &amp; prep) → Excel / Power BI (visualiz
 
 ## 🛠️ Tools Used
 - SQL Server (SSMS) — data cleaning & analysis
-- Excel / Power BI — visualization
+- Excel / Power BI — visualization.
 
 ## 📁 Data
 Raw data located in `/data/raw/`.
