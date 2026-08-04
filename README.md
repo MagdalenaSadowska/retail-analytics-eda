@@ -1,4 +1,4 @@
-# retail-analytics-eda
+# retail-analytics-eda 
 Retail sales EDA | SQL (data cleaning &amp; prep) → Excel / Power BI (visualization)  |  Covers pricing trends, inventory health, seasonality, and data quality audit.
 ## ❓ Business Questions 
 1. Are prices really growing?  (YoY - Year over Year)
