@@ -45,12 +45,12 @@ FROM sales_orders;
 	--780 duplicates found
 
 
-	--CHECKING WHAT IS DUPLICATED IN ORDER_ID
+--CHECKING WHAT IS DUPLICATED IN ORDER_ID
 
-	SELECT order_id, COUNT(*) AS quantity_duplicates
-	FROM sales_orders
-	GROUP BY order_id
-	HAVING COUNT(*)>1;
+SELECT order_id, COUNT(*) AS quantity_duplicates
+FROM sales_orders
+GROUP BY order_id
+HAVING COUNT(*)>1;
 	--DUPLICATES: 390 records are duplicated
 	-- Duplicates will be removed
 
@@ -62,11 +62,11 @@ FROM sales_orders;
 	-- 6 unique values found
 
 
-	-- CHECKING VALUES AND LOOKING FOR TYPOS
+-- CHECKING VALUES AND LOOKING FOR TYPOS
 
-	SELECT status, COUNT(*) AS name_duplicates
-	FROM sales_orders
-	GROUP BY status
+SELECT status, COUNT(*) AS name_duplicates
+FROM sales_orders
+GROUP BY status
 
 	-- STATUS: 6 unique values, inconsistent letter casing
 	-- 'complete' vs 'COMPLETED' - likely the same status
@@ -81,11 +81,11 @@ FROM sales_orders;
 	-- 28 unique values found
 
 
-	-- CHECKING VALUES AND LOOKING FOR TYPOS
+-- CHECKING VALUES AND LOOKING FOR TYPOS
 
-	SELECT country, COUNT(*) AS name_duplicates
-	FROM sales_orders
-	GROUP BY country
+SELECT country, COUNT(*) AS name_duplicates
+FROM sales_orders
+GROUP BY country
 
 	-- country: 26 unique values, inconsistent letter casing, country abbreviations mixed with full names
 	-- duplicate country names e.g. 'DE' vs 'Germany' vs 'Deutschland'
