@@ -55,3 +55,9 @@ Power BI dashboard covering revenue, seasonality, pricing and discount analysis.
 - `reports/Data_preparation_report.pdf` — data type conversions, cleaning steps and views built during preparation
 - `reports/Analysis_report.pdf` — findings for all business questions (Q1–Q6), with SQL, charts and key metrics
 - `reports/Brainstorm_report.pdf` — deeper investigation into two unexpected results (price growth vs. inflation, 2018/2022 revenue dips), verified against the data and external benchmarks
+
+## 🔑 Key Findings
+- Prices rose ~37% (2015–2024) while sales volume stayed flat — revenue growth is price-driven, not volume-driven
+- Strong Q4 seasonality across all years
+- No meaningful correlation between discounts and revenue (Pearson ≈ −0.01)
+- Inventory data is unreliable for analysis: 82.7% of rows show a date mismatch of over a year between order and stock update
