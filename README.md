@@ -45,10 +45,10 @@ Raw data files provided by mentor for educational purposes only.
 ## 📊 Dashboard
 Power BI dashboard covering revenue, seasonality, pricing and discount analysis.
 
-`dashboard/dashboard.pbix` — full Power BI file (requires Power BI Desktop to open)
-`dashboard/1_dashboard_overview.pdf` — screenshot, Overview page
-`dashboard/2_dashboard_details.pdf` — screenshot, Details page
-`dashboard/dashboard_demo.gif` — short demo of the year filter in action
+- `dashboard/dashboard.pbix` — full Power BI file (requires Power BI Desktop to open)
+- `dashboard/1_dashboard_overview.pdf` — screenshot, Overview page
+- `dashboard/2_dashboard_details.pdf` — screenshot, Details page
+- `dashboard/dashboard_demo.gif` — short demo of the year filter in action
 
 ## 📊 Reports
 - `reports/data_cleaning_summary.pdf` — summary of data quality findings and cleaning decisions across all three tables
