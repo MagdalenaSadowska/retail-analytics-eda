@@ -20,11 +20,6 @@ INNER JOIN products_mmmgmeum ON sales_orders.product_id = products_mmmgmeum.prod
 SELECT TOP 10 *
 FROM seasonality_VS_margin;
 
-ALTER VIEW seasonality_VS_margin AS
-SELECT sales_orders.product_id,order_date, quantity, unit_price,base_price, discount_pct, status
-FROM sales_orders
-INNER JOIN products_mmmgmeum ON sales_orders.product_id=products_mmmgmeum.product_id;-- Adding the discount_pct column for the analysis of question no. 5
-
 SELECT *
 FROM sales_orders
 INNER JOIN inventory_mmmgkubv ON sales_orders.product_id=inventory_mmmgkubv.product_id; -- Join for questions 3,6
@@ -39,7 +34,7 @@ FROM sales_orders
 INNER JOIN inventory_mmmgkubv ON sales_orders.product_id=inventory_mmmgkubv.product_id
 
 SELECT TOP 10 *
-FROM seasonality_VS_margin;
+FROM sales_inventory;
 
 
 ALTER VIEW seasonality_VS_margin AS
