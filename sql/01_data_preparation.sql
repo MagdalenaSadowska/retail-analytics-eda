@@ -56,11 +56,11 @@ ORDER BY YEAR(order_date) ASC;-- Revenue growth is mainly driven by rising price
 							  -- Quantities are fairly stable (ranging between 161k and 174k),
 						      -- while the average price increases consistently from 155 in 2015 to 212 in 2024.
 
-SELECT product_id,order_date, SUM(quantity)AS SUM_quantity_product, SUM(stock_quantity) AS SUM_STOCK, last_stock_update
+SELECT product_id,order_date, SUM(quantity)AS SUM_quantity_product, SUM(stock_quantity) AS SUM_STOCK, warehouse_country, last_stock_update
 FROM sales_inventory
 WHERE YEAR(order_date) IN (2024)
-GROUP BY product_id, order_date, last_stock_update
-ORDER BY product_id ASC; -- A fully reliable analysis is not entirely possible, because the data in last_stock_update does not align with order_date
+GROUP BY product_id, order_date, last_stock_update, warehouse_country
+ORDER BY product_id, order_date ASC; -- A fully reliable analysis is not entirely possible, because the data in last_stock_update does not align with order_date
 						 --for example, we have an order from 2024
 						 -- but a stock update from 2023, or an order from 2022
 						 -- with inventory levels from 2024, which makes it difficult to draw meaningful conclusions from this data.
