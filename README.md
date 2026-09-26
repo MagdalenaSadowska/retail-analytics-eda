@@ -133,7 +133,9 @@ FROM seasonality_VS_margin;
 
 **SCREEN 2:** preview of the first 10 rows of the seasonality_VS_margin view
 
-Since everything looks fine, I move on to the next step. I joined the inventory and sales_orders tables to prepare the data for questions 3 (Do we have an inventory problem?) and 6 (Which countries are overstocked?).
+Since everything looks fine, but after checking the result of the join, I notice that at this stage I won't be able to answer question 4 (Does seasonality affect the margin?), since the necessary information is missing. I do have the base price (base_price), the selling price (unit_price), and the discount (discount_pct). In theory, I could calculate the difference unit_price - base_price, but base_price is most likely a list price, which already includes some margin built in by the company; it isn't the product's manufacturing or purchase cost. Subtracting it from the selling price wouldn't show the actual margin, then, only a shift relative to the list price. My recommendation is to add a separate column with the product's actual cost (e.g. cost_price) to the data, without which a margin analysis in the financial sense isn't possible based on the current dataset.
+
+I move on to the next step. I joined the inventory and sales_orders tables to prepare the data for questions 3 (Do we have an inventory problem?) and 6 (Which countries are overstocked?).
 
 ```sql
 SELECT *
