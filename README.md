@@ -606,7 +606,7 @@ Thanks to the relationship I created linking q1 to Q2 in Model view (see Screen 
 For the percentage increase in price between the selected years, I created the measure:
 
 ```dax
-ProcentowyWzrostCeny = 
+PercentagePriceIncrease = 
 VAR MinYear = MIN('Q2'[Year])
 VAR MaxYear = MAX('Q2'[Year])
 VAR CenaPoczatkowa = CALCULATE(AVERAGE('Q2'[AVG Unit Price]), 'Q2'[Year] = MinYear)
@@ -624,7 +624,7 @@ The Revenue 2015-2024 tile refers directly to the Year_revenue column from table
 For the Increase in AVG price 2015-2024 tile, on the other hand, I used a simple, fixed text value saved as a measure:
 
 ```dax
-WzrostCenyText = "+36 %"
+PriceIncreaseText = "+36 %"
 ```
 
 Just as with the previous tile, I disabled its interaction with the Year slicer, so this tile also always shows the same result for the whole 2015-2024 period, regardless of which year someone selects in the filter. This combination gives two things at once: a fixed point of reference (revenue and price increase for the whole period analysed, always visible, regardless of the filter selection) and freedom to explore (selecting any years immediately recalculates the other three tiles and shows the revenue, quantity sold, and price increase for exactly that period).
@@ -672,7 +672,7 @@ The Details page also has three summary tiles, built on three different tables.
 The first tile, Discount-revenue correlation, is fixed and refers to table q5. It is simply the hard-coded value of the Pearson correlation coefficient, calculated earlier in SQL:
 
 ```dax
-Korelacja rabat–przychód = -0.01
+Discount–revenue correlation = -0.01
 ```
 
 Since this is just a plain numeric constant, not an aggregation of any column, the tile does not react to the Year slicer, the same as the other fixed values in this report.
