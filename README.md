@@ -12,7 +12,7 @@ Retail sales EDA | SQL (data cleaning &amp; prep)  / Power BI (visualization)  |
    What improvements can we make?  
 
 ## 🛠️ Tools Used
-- SQL Server (SSMS) — data cleaning & analysis
+- SQL Server (SSMS) — data cleaning & analysis 
 - Power BI — visualization.
 
 ## 📁 Data
